@@ -38,6 +38,20 @@ struct COLOR {
 		return this->ref;
 	}
 
+	DINT operator == (COLOR c) {
+		if (this->r != c.r) return 0;
+		if (this->g != c.g) return 0;
+		if (this->b != c.b) return 0;
+		if (this->exist != c.exist) return 0;
+		return 1;
+	}
+	DINT operator != (COLOR c) {
+		if (this->r == c.r) return 0;
+		if (this->g == c.g) return 0;
+		if (this->b == c.b) return 0;
+		if (this->exist == c.exist) return 0;
+		return 1;
+	}
 };
 
 struct STATE {
@@ -272,8 +286,8 @@ struct SPRITE{
 		this->scale = 1;
 		this->facing = 0;
 		this->pixels = this->size.w * this->size.h;
-		for (DINT y = 0; y < this->size.h; y++) {
-			for (DINT x = 0; x < this->size.w; x++) {
+		for (DINT x = 0; x < this->size.w; x++) {
+			for (DINT y = 0; y < this->size.h; y++) {
 				pixel = { x, y, colors[c] };
 				this->pixels << pixel;
 				c++;
@@ -336,11 +350,20 @@ struct BLOCK {
 	}
 	COLOR color;
 	DINT num;
-	DIMENSION measure;
+	DIMENSION measure, pos;
 
-	void _pos(DINT x, DINT y, DINT w = 16, DINT h = 16) {
+
+	void _mea(DINT x, DINT y, DINT w = 16, DINT h = 16) {
 		this->measure.x = x;
 		this->measure.y = y;
+		this->measure.w = w;
+		this->measure.h = h;
+	}
+	void _pos(DINT x, DINT y, DINT w = 16, DINT h = 16, DINT padding = 1) {
+		this->pos.x = x;
+		this->pos.y = y;
+		this->measure.x = x * w + x * padding;
+		this->measure.y = y * h + y * padding;
 		this->measure.w = w;
 		this->measure.h = h;
 	};
@@ -349,6 +372,10 @@ struct BLOCK {
 struct COLORS {
 	COLORS(std::initializer_list<COLOR> clrs) {
 		HOLDER<COLOR> colors = clrs;
+		this->w = 0;
+		this->h = 0;
+		this->r = 0;
+		this->c = 0;
 		for (DINT c = 0; c < colors._size(); c++) {
 			BLOCK blk = { colors[c] };
 			blk.num = c;
@@ -368,21 +395,32 @@ struct COLORS {
 		}
 	};
 	*/
-	COLORS() {};
+	COLORS() {
+		this->w = 0;
+		this->h = 0;
+		this->r = 0;
+		this->c = 0;
+	};
 
 	CHART<BLOCK> colors;
-	DINT w, h;
+	DINT w, h, r, c;
 
-	void _form(DINT w, DINT h, COLOR c, DINT size = 16) {
+	void _form(DINT w, DINT h, COLOR c, DINT size = 16, DINT padding = 1) {
 		this->w = w;
 		this->h = h;
 		for (DINT x = 0; x < w; x++) {
 			for (DINT y = 0; y < h; y++) {
 				BLOCK blk = { c };
 				blk.num = x + 1 * y + 1;
-				blk._pos(x * 16, y * 16);
+				blk._pos(x, y);
 				this->colors << blk;
 			}
+		}
+	}
+
+	BLOCK _get(DINT x, DINT y) {
+		for (DINT b = 0; b < this->colors.length; b++) {
+			if (this->colors[b].pos.x == x && this->colors[b].pos.y == y) return this->colors[b];
 		}
 	}
 

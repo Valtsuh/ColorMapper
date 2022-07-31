@@ -1082,21 +1082,15 @@ struct CHART {
 	}
 	void operator<<(ITEM item) {
 
-		if (this->size == 0 || this->length == this->size) {
-			//std::cout << "\n>Sizing. (" << this->size << ")";
-			this->_resize();
-		}
-		DINT offset = this->last;
-		for (DINT i = offset; i < this->size; i++) {
+		if (this->size == 0 || this->length == this->size) this->_resize();
+
+		for (SINT i = this->last; i < this->size; i++) {
 			if (this->exist[i] == 0) {
 				this->item[i] = item;
 				this->exist[i] = 1;
 				this->length++;
 				this->total++;
-				if (i == this->last) {
-					this->filled = 1;
-					this->last = 0;
-				}
+				this->last = 0;
 				break;
 			}
 		}
@@ -1110,20 +1104,15 @@ struct CHART {
 				this->exist[position] = 0;
 				this->item[position] = item;
 				this->length--;
-			}
-			if (this->filled == 1) {
 				this->last = position;
-				this->filled = 0;
 			}
 			if (this->length == 0) {
 				if (this->size > 0) {
-					//std::cout << "\nLength 0 & size 0, deleting.";
 					delete[] this->exist;
 					delete[] this->item;
 					this->size = 0;
 				}
 			}
-			//if(position < this->last) this->last = position;
 		}
 		else {
 			std::cout << "\nOut of bounds.";

@@ -24,7 +24,9 @@
 #define X	{235, 235, 235, 0}
 #define Z	{0, 0, 0, 0, 1}
 
-#define CLRS {R, G, BL, Y, GR, BRN, PNK, B, W, X};
+#define BG	{100, 100, 100}
+
+#define CLRS {LR, R, DR, LG, G, DG, LBL, BL, DBL, Y, LGR, GR, DGR, LBR, BRN, DBR, PNK, B, W, X};
 
 
 #define ENGINE_SPRITE_ZERO	{R, G, B, R, G, B, R, G, B, R, G, B, R, G, B, R, G, B, R, G, B, R, G, B, R}
