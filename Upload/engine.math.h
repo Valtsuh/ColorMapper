@@ -11,6 +11,28 @@ struct MATH {
 		return (-1) * value;
 	}
 
+	static SINT _isnum(const char character) {
+		if (character == '0') return 0;
+		if (character == '1') return 1;
+		if (character == '2') return 2;
+		if (character == '3') return 3;
+		if (character == '4') return 4;
+		if (character == '5') return 5;
+		if (character == '6') return 6;
+		if (character == '7') return 7;
+		if (character == '8') return 8;
+		if (character == '9') return 9;
+		return -1;
+
+	}
+	static DINT _tnth(DINT a, DINT th) {
+		DINT value = a;
+		do {
+			value *= 10;
+			th--;
+		} while (th > 0);
+		return value;
+	}
 	static SINT _gap(SINT value = 0, SINT range = -1) {
 		DICE dice;
 		SINT a = value - range, b = value + range;

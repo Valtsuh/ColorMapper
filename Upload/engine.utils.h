@@ -391,6 +391,12 @@ struct DIMENSION {
 		this->size = 0;
 		this->direction = 0;
 	}
+	DIMENSION(DINT x, DINT y, DINT w, DINT h) {
+		this->x = x;
+		this->y = y;
+		this->w = w;
+		this->h = h;
+	}
 	~DIMENSION() {
 		this->x = 0;
 		this->y = 0;
@@ -411,6 +417,11 @@ struct DIMENSION {
 		this->h = dimension.h;
 		this->size = dimension.size;
 	}
+
+	void _dump() {
+		std::cout << "\n>" << x << ", " << y;
+		std::cout << " - " << w << " x " << h;
+	}
 };
 struct SPOT {
 	SPOT(double x = 0.0, double y = 0.0, double z = 0.0) {
@@ -428,6 +439,11 @@ struct STRING {
 		this->utext[this->length] = (unsigned char)'\0';
 		this->text[this->length] = '\0';
 	};
+	STRING(const char text[]) {
+		this->length = 0;
+		this->_append(text);
+	}
+
 	~STRING() {
 		this->length = 0;
 		*this->wtext = {};
@@ -485,6 +501,22 @@ struct STRING {
 		}
 		this->text[this->length] = '\0';
 		this->wtext[this->length] = L'\0';
+	}
+
+	void _app(const char character) {
+		this->text[this->length] = character;
+		this->length++;
+		this->text[this->length] = '\0';
+	}
+
+	void _prev() {
+		if (this->length > 0) {
+			this->length--;
+			this->text[this->length] = '\0';
+		}
+		else {
+			this->text[0] = '\0';
+		}
 	}
 
 	void _space(const char text[]) {
@@ -588,7 +620,7 @@ struct HOLDER {
 		return *(this->ts.begin() + position);
 	}
 	DINT _size() {
-		return this->ts.size();
+		return (DINT)this->ts.size();
 	}
 };
 template <typename LIST_ITEM>
@@ -973,7 +1005,7 @@ struct CHART {
 	}
 	~CHART() {
 		this->size = 0;
-		this->block = 0;
+		this->block = 8;
 		this->filled = 0;
 		this->last = 0;
 		this->length = 0;

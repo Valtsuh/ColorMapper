@@ -1,6 +1,6 @@
 
 struct LIT {
-	LIT(double identifier, int key, int numeric, const char upper, const char lower, LITERAL shape) {
+	LIT(double identifier, int key, int numeric, const char lower, const char upper, LITERAL shape) {
 		this->identifier = identifier;
 		this->numeric = numeric;
 		this->key = key;
@@ -46,7 +46,7 @@ struct WRITER {
 					if (tmp.key >= 0) pix.color = c;
 					px = x + (pix.x * size) + (ll * size) + (length * spacing);
 					py = y + (pix.y * size);
-					state._set(px, py, pix.color, size);
+					state._set(px, py, pix.color, size, size);
 				}
 			}
 			ll += tmp.shape.size.w;
@@ -59,6 +59,14 @@ struct WRITER {
 			if (a.lower == character || a.upper == character) return a;
 		}
 		return dummy;
+	}
+
+	static char _valid(DINT key) {
+		for (DINT i = 0; i < lit.length; i++) {
+			if (lit[i].key == key) return lit[i].lower;
+		}
+
+		return '?';
 	}
 
 	static char _c(DINT n) {
@@ -107,6 +115,21 @@ struct WRITER {
 	}
 };
 
+struct KEYER {
+	KEYER() {};
+
+	static DINT lclick, rclick, alt, ctrl, shift, line;
+	
+
+
+};
+
+DINT KEYER::lclick;
+DINT KEYER::rclick;
+DINT KEYER::alt;
+DINT KEYER::ctrl;
+DINT KEYER::shift;
+DINT KEYER::line;
 CHART<LIT> WRITER::lit;
 LIT WRITER::dummy;
 char WRITER::write[16] = {};
