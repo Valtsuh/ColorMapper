@@ -2,10 +2,11 @@
 A color mapper for the engine.
 
 Features:
-    -Saving & loading for files, with color loading.
-    -16x16, 24x24 & 32x32 size drawings.
-    -Plenty of colors to choose from, and color saving (a list of previously used colors).
-    -Scale(1/8) preview of the drawing.
+<br>-Saving & loading for files.
+<br>-16x16, 24x24 & 32x32 size drawings.
+<br>-Plenty of colors to choose from.
+<br>-Color saving (a list of previously used colors).
+<br>-Scale(1/8) preview of the drawing.
   
 ![colormapper](https://user-images.githubusercontent.com/77432892/181926319-ed4bf8e2-1ea5-443a-bc71-a59f296959ec.jpg)
 
