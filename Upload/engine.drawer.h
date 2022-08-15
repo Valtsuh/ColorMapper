@@ -168,22 +168,31 @@ struct STATE {
 	void _precise(DINT x, DINT y, COLOR c = { 125, 25, 240 }) {
 		x = this->_clamp(0, x, this->w - 1);
 		y = this->_clamp(0, y, this->h - 1);
-		this->pixel = (SINT*)this->memory + this->h * this->w - (y + 1) * this->w + x;
+
+		SINT calc = this->h * this->w - (y + 1) * this->w + x;
+		this->pixel = (SINT*)this->memory + calc;
 		*this->pixel = c.ref;
 
 	}
 
-	void _set(DINT px, DINT py, COLOR c = {}, DINT width = 1, DINT height = 1) {
+	void _set(DINT px, DINT py, COLOR c = {}, DINT width = 1, DINT height = 1, DINT outline = 0, COLOR color = B) {
 		
 		px = this->_clamp(0, px, this->w);
 		DINT tx = this->_clamp(0, px + width, this->w);
 		py = this->_clamp(0, py, this->h);
 		DINT ty = this->_clamp(0, py + height, this->h);
-
+		COLOR col = c;
 		for (DINT y = py; y < ty; y++) {
-			this->pixel = (SINT*)this->memory + this->h * this->w - (y + 1) * this->w + px;
+			SINT calc = this->h * this->w - (y + 1) * this->w + px;
+			this->pixel = (SINT*)this->memory + calc;
 			for (DINT x = px; x < tx; x++) {
-				*this->pixel++ = c._ref();
+				if (outline && (x == px || x == tx - 1 || y == py || y == ty - 1)) {
+					col = color;
+				} else{
+					col = c;
+				}
+				*this->pixel = col._ref();
+				this->pixel++;
 			}
 		}
 	}
@@ -461,9 +470,10 @@ struct BLOCK {
 	BLOCK(COLOR c = W) {
 		this->color = c;
 		this->num = 0;
+		this->mark = 0;
 	}
 	COLOR color;
-	DINT num;
+	DINT num, mark;
 	DIMENSION measure, pos;
 
 
@@ -546,8 +556,15 @@ struct COLORS {
 
 	CHART<BLOCK> colors;
 	BLOCK dummy;
-	DINT w, h, r, c;
+	DINT w, h, r, c, p;
 	DIMENSION measure;
+
+	DINT _exist(COLOR color) {
+		for (DINT c = 0; c < this->colors.length; c++) {
+			if (this->colors[c].color == color) return 1;
+		}
+		return 0;
+	}
 
 	void _form(DINT w, DINT h, COLOR c, DINT width = 16, DINT height = 16, DINT padding = 1) {
 		this->w = w;
@@ -555,18 +572,19 @@ struct COLORS {
 		this->measure.w = w * width + w * padding;
 		this->measure.h = h * height + h * padding;
 		this->colors._close();
+		this->p = padding;
 		BLOCK blk;
 		for (DINT x = 0; x < w; x++) {
 			for (DINT y = 0; y < h; y++) {
 				blk = { c };
 				blk.num = x + 1 * y + 1;
-				blk._pos(x, y, width, height);
+				blk._pos(x, y, width, height, padding);
 				this->colors << blk;
 			}
 		}
 	}
 
-	void _set(DINT x, DINT y, DINT per = 9, SINT xo = 0, SINT yo = 0, DINT w = 16, DINT h = 16) {
+	void _set(DINT x, DINT y, DINT per = 9, SINT xo = 0, SINT yo = 0, DINT w = 16, DINT h = 16, DINT p = 1) {
 		this->r = 0;
 		this->c = 0;
 		for (DINT c = 0; c < this->colors.length; c++) {
@@ -580,7 +598,7 @@ struct COLORS {
 			}
 			blk->pos.x = this->r;
 			blk->pos.y = this->c;
-			blk->_pos(blk->pos.x, blk->pos.y, w, h);
+			blk->_pos(blk->pos.x, blk->pos.y, w, h, p);
 			//blk->_mea(Engine2::ENGINE::WINDOW::measure.w - blk->measure.w * this->clrs.r - this->clrs.r * 2, blk->measure.h * this->clrs.c + this->clrs.c * 2);
 		}
 		this->measure.w = this->c * w;
@@ -605,25 +623,24 @@ struct COLORS {
 			if (color.exist) {
 				for (DINT l = 5; l > 1; l--) {
 					blk = { color._lighten(sat * l) };
-					this->colors << blk;
+					if (this->_exist(blk.color) == 0) this->colors << blk;
 				}
 				blk = { color };
-				this->colors << blk;
+				if (this->_exist(blk.color) == 0) this->colors << blk;
 				for (DINT d = 1; d < 7; d++) {
 					blk = { color._darken(sat * d) };
-					this->colors << blk;
+					if (this->_exist(blk.color) == 0) this->colors << blk;
 				}
 			}
 			else {
 				blk = { color };
-				blk.color._dump();
-				this->colors << blk;
+				if (this->_exist(blk.color) == 0) this->colors << blk;
 			}
 		}
 	}
 
 	BLOCK _get(DINT x, DINT y) {
-		for (DINT b = 0; b < this->colors.length; b++) {
+		for (DINT b = x * y - 2; b < this->colors.length; b++) {
 			if (this->colors[b].pos.x == x && this->colors[b].pos.y == y) {
 				return this->colors[b];
 			}
@@ -631,11 +648,98 @@ struct COLORS {
 		return this->dummy;
 	}
 	BLOCK* _nget(DINT x, DINT y) {
-		for (DINT b = 0; b < this->colors.length; b++) {
+		for (DINT b = x * y - 2; b < this->colors.length; b++) {
 			if (this->colors[b].pos.x == x && this->colors[b].pos.y == y) return &this->colors[b];
 		}
-		
+
 		return &this->dummy;
 	}
-	
+	void _adjacency(BLOCK* block, COLOR color, DINT up, DINT down, DINT left, DINT right) {
+		DINT x = block->pos.x, y = block->pos.y;
+
+		BLOCK* u = this->_nget(x, y - 1);
+		BLOCK* d = this->_nget(x, y + 1);
+		BLOCK* l = this->_nget(x - 1, y);
+		BLOCK *r = this->_nget(x + 1, y);
+		if (u->color == block->color) {
+			if (y > 0) this->_adjacency(u, color, 1, 0, 1, 1);
+			u->color = color;
+		}
+		if (d->color == block->color) {
+			std::cout << "\n" << this->h;
+			//if (y < this->h - 1) this->_adjacency(d, color, 0, 1, 1, 1);
+			d->color = color;
+		}
+		if (r->color == block->color) {
+			//if(x < this->w - 1) this->_adjacency(r, color, 1, 1, 0, 1);
+			r->color = color;
+		}
+		if (l->color == block->color) {
+			if (x > 0) this->_adjacency(l, color, 1, 1, 1, 0);
+			l->color = color;
+		}
+		block->color = color;
+	}
+
+	void _color(BLOCK* center, COLOR color) {
+		BLOCK* blk;
+		for (DINT b = 0; b < this->colors.length; b++) {
+			blk = &this->colors[b];
+			if (blk->color == center->color) blk->mark = 1; else blk->mark = 0;
+		}
+		for (DINT b = 0; b < this->colors.length; b++) {
+			blk = &this->colors[b];
+			if (blk->mark) blk->color = color;
+		}
+	}
+
+	void _darken() {
+		BLOCK* blk;
+		for (DINT b = 0; b < this->colors.length; b++) {
+			blk = &this->colors[b];
+			if (
+				blk->color.exist &&
+				blk->color.r != 0 &&
+				blk->color.g != 0 &&
+				blk->color.b != 0
+				) {
+				blk->mark = 1;
+			}
+			else blk->mark = 0;
+		}
+		for (DINT b = 0; b < this->colors.length; b++) {
+			blk = &this->colors[b];
+			if (blk->mark) {
+				blk->color = blk->color._darken(5);
+			}
+		}
+	}
+
+	void _lighten() {
+		BLOCK* blk;
+		for (DINT b = 0; b < this->colors.length; b++) {
+			blk = &this->colors[b];
+			if (
+				blk->color.exist &&
+				blk->color.r != 255 &&
+				blk->color.g != 255 &&
+				blk->color.b != 255
+				) {
+				blk->mark = 1;
+			}
+			else blk->mark = 0;
+		}
+		for (DINT b = 0; b < this->colors.length; b++) {
+			blk = &this->colors[b];
+			if (blk->mark) {
+				blk->color = blk->color._lighten(5);
+			}
+		}
+	}
+};
+
+
+struct PEN {
+	PEN() {};
+
 };

@@ -1,15 +1,17 @@
+
 namespace Engine2 {
 	struct GET {
-		GET(const char title[], DINT type = 1) {
+		GET(const char title[], DINT type = 1, DINT spacing = 1) {
 			this->title = title;
 			this->open = type;
+			this->spacing = spacing;
 			this->bg = { 25, 25, 100, 30 };
 		};
 		GET() {
 			this->open = 0;
 		};
 
-		DINT open;
+		DINT open, spacing;
 		STRING title, cin;
 		DIMENSION bg;
 
@@ -17,11 +19,39 @@ namespace Engine2 {
 	};
 	static KEYER keyer;
 	static GET input;
+
+	struct VERSION {
+		VERSION(DINT h, DINT l, DINT s, DINT m) {
+			huge = h;
+			large = l;
+			lesser = s;
+			minor = m;
+		}
+		VERSION() {};
+		static DINT minor, lesser, large, huge;
+
+		static STRING _text() {
+			STRING st;
+			st._append(WRITER::_itc(huge));
+			st._app('.');
+			st._append(WRITER::_itc(large));
+			st._app('.');
+			st._append(WRITER::_itc(lesser));
+			st._app('.');
+			st._append(WRITER::_itc(minor));
+			return st;
+		}
+
+	};
+
 	struct ENGINE {
 		ENGINE() {
 			this->on = 0;
 			this->configured = 0;
 			WRITER(ENGINE_TYPOGRAPH);
+			Engine2::ENGINE::version = { ENGINE_HUGE, ENGINE_LARGE, ENGINE_SMALL, ENGINE_MINOR };
+			//std::cout << "\nVersion: " << Engine2::ENGINE::version._text().text;
+
 		};
 		using frames = std::chrono::duration<int64_t, std::ratio<1, 10>>;
 		struct STATISTICS {
@@ -82,6 +112,7 @@ namespace Engine2 {
 				this->window = {};
 				this->client = {};
 				this->result = -1;
+				this->m = ENGINE_MOUSE;
 			};
 			~WINDOW() {
 				this->handle = 0;
@@ -100,6 +131,7 @@ namespace Engine2 {
 			DINT width, heigth, x, y;
 			MSG msg;
 			DIMENSION mouse;
+			SPRITE m;
 			BOOL result;
 			static DIMENSION measure;
 			//TRACKMOUSEEVENT me;
@@ -210,46 +242,17 @@ namespace Engine2 {
 		};
 
 		struct BUTTON {
-			BUTTON(const char text[] = "Undefined", DINT scale = 1, DINT spacing = 1, DINT padding = 5) {
-				this->text._write(text);
-				this->p = padding;
-				this->measure = {0, 0, (this->text.length * 4 * scale) * spacing + this->p * 2, 5 * scale + this->p * 2 };
-				this->scale = scale;
-				this->mode = 0;
-
-			};
-
-			BUTTON(DINT scale, SPRITE sprite, DINT x, DINT y) {
+			BUTTON(SPRITE sprite, DINT scale = 2) {
+				//this->row = row;
+				//this->col = col;
 				this->scale = scale;
 				this->sprite = sprite;
-				this->sprite.scale = scale;
+				this->sprite.scale = this->scale;
 				this->current = this->sprite;
-				this->mode = 1;
-				this->c = 0;
-				this->measure = { x, y, this->sprite.size.w * scale, this->sprite.size.h * scale };
-			}
 
-			BUTTON(DINT scale, const char sprite[], DINT x, DINT y) {
-				this->scale = scale;
-				STRING s = sprite;
-				this->sprite = s.text;
-				this->sprite.scale = scale;
-				this->current = this->sprite;
-				STRING h = sprite;
-				h._append("-hover");
-				this->hover = h.text;
-				this->hover.scale = scale;
-				STRING a = sprite;
-				a._append("-active");
-				this->active = a.text;
-				this->active.scale = scale;
-				this->text = sprite;
-				this->mode = 1;
-				this->c = 0;
-				this->measure = { x, y, this->sprite.size.w * scale, this->sprite.size.h * scale };
 			};
-
-			DINT mode, c, p, scale;
+			BUTTON() {};
+			DINT mode, c, p, scale, row, col;
 
 			STRING text;
 			BLOCK block;
@@ -260,16 +263,66 @@ namespace Engine2 {
 				if(this->mode == 0) x = x - this->measure.w + this->p;
 				if(this->mode == 0) y = y - this->p * 2;
 				this->measure = { x, y, this->measure.w, this->measure.h };
-				this->block._mea(this->measure.x, this->measure.y, this->measure.w, this->measure.h);
+				if(this->mode == 0) this->block._mea(this->measure.x, this->measure.y, this->measure.w, this->measure.h);
 			}
 
 			void _draw(SINT x = -1, SINT y = -1) {
 				x = (x == -1) ? (this->measure.x) : (x);
 				y = (y == -1) ? (this->measure.y) : (y);
+				/*
+				this->text.width += this->text.length * 1;
 				state._set(this->block.measure.x, this->block.measure.y, LGR, this->block.measure.w, this->block.measure.h);
-				WRITER::_type(this->text.text, x + this->p, y + this->p, this->scale, 1, B);
+				WRITER::_type(this->text, x + this->p, y + this->p, this->scale, 1, B);
+				*/
+				this->current._draw(this->scale, x, y);
+
 			}
 
+
+		};
+
+		struct TOOLBAR {
+			TOOLBAR(DINT x, DINT y) {
+				this->measure.x = x;
+				this->measure.y = y;
+				this->spacing = 3;
+			};
+			TOOLBAR() {
+				this->spacing = 3;
+			};
+
+			CHART<BUTTON> button;
+			CHART<DIMENSION> row;
+			DIMENSION measure;
+			DINT spacing;
+
+			void _add(BUTTON button, DINT row) {
+				DINT w = button.current.size.w * button.scale + this->spacing;
+				DINT h = button.current.size.h * button.scale + this->spacing;
+				if (this->row.length < row + 1) {
+					this->measure.h += h;
+					DIMENSION d = { this->measure.w, this->measure.h, w, h };
+					this->row << d;
+				}
+				else {
+					this->row[row].w += w;
+				}
+				button.measure = { this->measure.x - this->row[row].w, this->measure.y - this->row[row].y, w, h};
+				this->button << button;
+				this->measure.w += w;
+			}
+
+			void _pos(DINT x, DINT y) {
+				this->measure.x = x;
+				this->measure.y = y;
+			}
+
+			void _draw() {
+				for (DINT b = 0; b < this->button.length; b++) {
+					BUTTON button = this->button[b];
+					button._draw();
+				}
+			}
 
 		};
 
@@ -312,7 +365,9 @@ namespace Engine2 {
 				}
 			}
 			STRING title;
-			title._append("Engine");
+			title._append("ColorMapper");
+			title._space("v");
+			title._append(Engine2::ENGINE::version._text().text);
 			title._space(WRITER::_itc(this->stats.fps));
 
 			delete m;
@@ -325,33 +380,28 @@ namespace Engine2 {
 			this->on = 1;
 			this->clrs._generate(COLORLIST);
 			//this->clrs = CLRS;
-			this->clrs._set(0, 0, 22, 0, 0, 16, 8);
-			this->clrs._offset(Engine2::ENGINE::WINDOW::measure.w - this->clrs.r * 16 - this->clrs.r - 16);
-			this->previous._form(1, 11, W, 16, 8);
-			this->previous._offset(Engine2::ENGINE::WINDOW::measure.w - this->clrs.r * 16 - this->clrs.r * 1 - 16);
+			DINT padding = 2;
+			this->clrs._set(0, 0, 22, 0, 0, 16, 8, padding);
+			this->clrs._offset(Engine2::ENGINE::WINDOW::measure.w - (this->clrs.r + 1) * (16 + padding));
+			this->previous._form(1, 11, W, 16, 8, padding);
+			this->previous._offset(Engine2::ENGINE::WINDOW::measure.w - (this->clrs.r + 1) * (16 + padding));
 			this->bg = BG;
 			this->selected = X;
 			this->blocks._form(16, 16, X);
 
-			DINT y = Engine2::ENGINE::WINDOW::measure.h - 22;
+			DINT y = Engine2::ENGINE::WINDOW::measure.h - 22, p = 3;
 			DIMENSION e = Engine2::ENGINE::WINDOW::measure;
-			this->save = {2, ENGINE_BUTTON_SAVE, Engine2::ENGINE::WINDOW::measure.w - 27, y};
-			
-			this->save.measure._dump();
-			
-			//this->save._pos();
-
-			this->load = { 2, ENGINE_BUTTON_LOAD, e.w - 27, y - 30};			
-			this->clear = { 2, ENGINE_BUTTON_CLEAR, e.w - 65, y };
-			this->s = {2, ENGINE_BUTTON_SMALL, Engine2::ENGINE::WINDOW::measure.w - 160, y };
-			this->m = {2, ENGINE_BUTTON_MEDIUM, Engine2::ENGINE::WINDOW::measure.w - 220, y };
-			this->l = {2, ENGINE_BUTTON_LARGE, Engine2::ENGINE::WINDOW::measure.w - 280, y };
-			this->test = { 2, ENGINE_BUTTON_LINE, Engine2::ENGINE::WINDOW::measure.w - 320, y };
-			this->test.active = ENGINE_BUTTON_LINE_ACTIVE;
-			this->test.active.scale = 2;
-			this->test.hover = ENGINE_BUTTON_LINE_HOVER;
-			this->test.hover.scale = 2;
-
+			this->toolbar._pos(e.w, e.h);
+			this->toolbar._add({ ENGINE_BUTTON_SAVE }, 0);
+			this->toolbar._add({ ENGINE_BUTTON_LOAD }, 1);
+			this->toolbar._add({ ENGINE_BUTTON_DARKEN }, 0);
+			this->toolbar._add({ ENGINE_BUTTON_LIGHTEN }, 0);
+			this->toolbar._add({ ENGINE_BUTTON_CLEAR }, 0);
+			this->toolbar._add({ ENGINE_BUTTON_SMALL }, 0);
+			this->toolbar._add({ ENGINE_BUTTON_MEDIUM }, 0);
+			this->toolbar._add({ ENGINE_BUTTON_LARGE }, 0);
+			Engine2::ENGINE::x = X;
+			Engine2::ENGINE::marker = MARKER;
 
 
 			Engine2::ENGINE::preview.size = 2;
@@ -365,16 +415,25 @@ namespace Engine2 {
 			for (DINT b = 0; b < this->blocks.colors.length; b++) {
 				BLOCK blk = this->blocks.colors[b];
 				state._set(blk.measure.x, blk.measure.y, blk.color, blk.measure.w, blk.measure.h);
-			}
-			for (DINT b = 0; b < this->blocks.colors.length; b++) {
-				BLOCK blk = this->blocks.colors[b];
-				state._set(Engine2::ENGINE::preview.x + blk.pos.x * Engine2::ENGINE::preview.size, Engine2::ENGINE::preview.y + blk.pos.y * Engine2::ENGINE::preview.size, blk.color, Engine2::ENGINE::preview.size, Engine2::ENGINE::preview.size);
+				state._set(Engine2::ENGINE::preview.x + blk.pos.x * Engine2::ENGINE::preview.size, Engine2::ENGINE::preview.y + blk.pos.y * Engine2::ENGINE::preview.size, blk.color, Engine2::ENGINE::preview.size, Engine2::ENGINE::preview.size);				
+				state._set(Engine2::ENGINE::preview.x + blk.pos.x + this->blocks.w, Engine2::ENGINE::preview.y + blk.pos.y - this->blocks.h - 2, blk.color);
 			}
 
-			
+			DINT spacing = 2;
+		
 			for (DINT c = 0; c < this->clrs.colors.length; c++){
 				BLOCK blk = this->clrs.colors[c];
-				state._set(blk.measure.x, blk.measure.y, blk.color, blk.measure.w, blk.measure.h);
+				if (blk.color == this->selected) {
+					state._set(blk.measure.x - spacing, blk.measure.y - spacing, blk.color, blk.measure.w + spacing * 2, blk.measure.h + spacing * 2, 1, W);
+				}
+				else {
+					if (blk.color == Engine2::ENGINE::x || blk.color == Engine2::ENGINE::marker) {
+						state._set(blk.measure.x - spacing / 2, blk.measure.y - spacing / 2, blk.color, blk.measure.w + spacing, blk.measure.h + spacing, 1, {255, 200, 100});
+					}
+					else {
+						state._set(blk.measure.x, blk.measure.y, blk.color, blk.measure.w, blk.measure.h);
+					}
+				}
 			}
 
 			for (DINT p = 0; p < this->previous.colors.length; p++) {
@@ -382,41 +441,51 @@ namespace Engine2 {
 				state._set(blk.measure.x, blk.measure.y, blk.color, blk.measure.w, blk.measure.h);
 			}
 
-			DIMENSION d = Engine2::ENGINE::WINDOW::measure;
-			state._set(d.w - (this->clrs.r + 1) * 16 - this->clrs.r - 16 - 1, 1, this->selected, 16, 16);
+			for (DINT t = 0; t < this->tools.colors.length; t++) {
+				BLOCK blk = this->tools.colors[t];
+				state._set(blk.measure.x, blk.measure.y, blk.color, blk.measure.w, blk.measure.h);
+			}
 
-			this->load.current._draw(this->load.scale, this->load.measure.x, this->load.measure.y);
-			this->save.current._draw(this->save.scale, this->save.measure.x, this->save.measure.y);
-			this->clear.current._draw(this->clear.scale, this->clear.measure.x, this->clear.measure.y);
-			this->s.current._draw(this->s.scale, this->s.measure.x, this->s.measure.y);
-			this->m.current._draw(this->m.scale, this->m.measure.x, this->m.measure.y);
-			this->l.current._draw(this->l.scale, this->l.measure.x, this->l.measure.y);
-			this->test.current._draw(this->test.scale, this->test.measure.x, this->test.measure.y);
+			DIMENSION d = Engine2::ENGINE::WINDOW::measure;
+			state._set(d.w - (this->clrs.r + 3) * (this->clrs.colors[0].measure.w) - spacing, spacing, this->selected, 16, 16, 1, LGR);
+
+			this->toolbar._draw();
 			if (Engine2::input.open != 0) {
 				DIMENSION i = Engine2::input.bg;
 				DINT scale = 1;
 				DINT l = (Engine2::input.cin.length > Engine2::input.title.length) ? (Engine2::input.cin.length) : (Engine2::input.title.length);
 				state._set(i.x, i.y, LGR, 200, 30);
-				WRITER::_type(Engine2::input.title.text, i.x + 5, i.y + 5, scale, 1, B);
-				WRITER::_type(Engine2::input.cin.text, i.x + 5, i.y + 17, scale, 1, B);
+				WRITER::_type(Engine2::input.title, i.x + 5, i.y + 5, scale, 1, B);
+				WRITER::_type(Engine2::input.cin, i.x + 5, i.y + 17, scale, 1, B);
 			}
+
+			//state._set(this->window.mouse.x - 1, this->window.mouse.y - 1, PNK, 2, 2);
+			this->window.m._draw(-1, this->window.mouse.x - this->window.m.size.w / 2, this->window.mouse.y - this->window.m.size.h / 2);
 		}
 		static DIMENSION preview;
-		BUTTON save, load, clear, s, m, l, test;
+		static COLOR x, marker;
+		static VERSION version;
+		TOOLBAR toolbar;
+		BUTTON save, load, clear, s, m, l, test, darken, lighten;
 		COLOR bg;
-		COLORS blocks;
-		COLORS clrs;
-		COLORS previous;
+		COLORS blocks, clrs, previous, tools;
 		STATISTICS stats;
 		WINDOW window;
 		DINT on, configured;
 		COLOR selected;
+		SPRITE tst;
 
 	};
 	static HWND console;
 	static HWND window;
 }
-
+DINT Engine2::VERSION::huge;
+DINT Engine2::VERSION::large;
+DINT Engine2::VERSION::lesser;
+DINT Engine2::VERSION::minor;
+Engine2::VERSION Engine2::ENGINE::version;
+COLOR Engine2::ENGINE::x;
+COLOR Engine2::ENGINE::marker;
 DIMENSION Engine2::ENGINE::preview;
 DIMENSION Engine2::ENGINE::WINDOW::measure;
 std::chrono::system_clock::time_point Engine2::ENGINE::STATISTICS::nf;

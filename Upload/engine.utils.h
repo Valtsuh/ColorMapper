@@ -7,7 +7,7 @@ typedef long double LBLE;
 
 #define ENGINE_DATABASE_LIST_LENGTH_MAX 128
 #define ENGINE_DATABASE_INDEX_BLOCK_SIZE 8
-#define ENGINE_TEXT_MAX_LENGTH 64
+#define ENGINE_TEXT_MAX_LENGTH 128
 #define ENGINE_DRAW	101
 #include <time.h>
 #include <chrono>
@@ -396,6 +396,8 @@ struct DIMENSION {
 		this->y = y;
 		this->w = w;
 		this->h = h;
+		this->size = 0;
+		this->direction = 0;
 	}
 	~DIMENSION() {
 		this->x = 0;
@@ -438,10 +440,11 @@ struct STRING {
 		this->wtext[this->length] = L'\0';
 		this->utext[this->length] = (unsigned char)'\0';
 		this->text[this->length] = '\0';
+		this->width = 0;
 	};
 	STRING(const char text[]) {
 		this->length = 0;
-		this->_append(text);
+		this->_write(text);
 	}
 
 	~STRING() {
@@ -450,7 +453,7 @@ struct STRING {
 		*this->text = {};
 		*this->utext = {};
 	};
-	DINT length;
+	DINT length, width;
 	wchar_t wtext[ENGINE_TEXT_MAX_LENGTH];
 	char text[ENGINE_TEXT_MAX_LENGTH];
 	unsigned char utext[ENGINE_TEXT_MAX_LENGTH];

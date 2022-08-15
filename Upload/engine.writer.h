@@ -34,12 +34,12 @@ struct WRITER {
 	static CHART <LIT> lit;
 	static LIT dummy;
 	static char write[16];
-	static void _type(const char text[], DINT x, DINT y, DINT size = 2, DINT spacing = 2, COLOR c = B) {
+	static void _type(STRING text, DINT x, DINT y, DINT size = 2, DINT spacing = 2, COLOR c = B) {
 		DINT px, py, ll = 0;
 		LIT tmp;
 		PIXEL pix;
-		for (DINT length = 0; text[length] != '\0'; length++) {
-			tmp = WRITER::_lit(text[length]);
+		for (DINT length = 0; text.text[length] != '\0'; length++) {
+			tmp = WRITER::_lit(text.text[length]);
 			for (DINT p = 0; p < tmp.shape.pixels.length; p++) {
 				pix = tmp.shape.pixels[p];
 				if (pix.color.exist) {
@@ -112,6 +112,14 @@ struct WRITER {
 			digits._close();
 		}
 		return write;
+	}
+
+	static DINT _width(char character) {
+		for (DINT c = 0; c < lit.length; c++) {
+			LIT l;
+			if (l.upper == character || l.lower == character) return l.shape.size.w;
+		}
+		return 0;
 	}
 };
 

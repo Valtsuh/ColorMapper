@@ -1,0 +1,46 @@
+	
+
+	/*
+
+		Created by Jussi 'Valtsu(h)' Männistö
+
+		To-do:
+			- Some redesigning, and tools.
+			- Likely some file format supports such as JPG, BMP, PNG.
+
+	*/
+
+	x.x.x.x
+
+		[Main]
+		[Interface]
+		[Controls]
+		[Code]
+		[Tweaks]
+	
+	0.0.1.0
+		
+		[Main]
+			- First pre-release version.
+			- Added a 1 pixel preview aswell to go along with the 2 pixel preview, likely to have a zoom option at some point.
+			- Some interface design and changes.
+		[Interface]
+			- Might not be self-explanatory, 
+				my suggestion would be to try out the buttons first, before doing any major drawing.				
+		[Controls]
+			- Left click paints, right click removes, same for pressing down respectively.
+			- Wheel changes color on the palette, down towards lighter colors, up towards darker colors.
+			- Control clicking picks the color from the canvas.
+			- Shift clicking paints whole colors with the selected color, not to be confused with "fill" (yet to be implemented)
+			- While saving / loading is open, pressing Escape halts the saving / loading, 
+				and after typing a name, enter submits for saving / loading. (Yet to do some design)
+		[Code]
+			- Some clean ups.				
+		[Tweaks]			
+			- Color palette's moved a bit.
+			- Highlights for selected color, transparent color 
+				and marker (for animation making, otherwise the software reads the first colored pixel for measuring).
+			- Removed some duplicate color calculations from palette.
+			- Prepared colors list lengthened a bit.
+
+
