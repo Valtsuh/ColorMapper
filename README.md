@@ -6,7 +6,7 @@ Features:
 <br>-16x16, 24x24 & 32x32 size drawings.
 <br>-Plenty of colors to choose from.
 <br>-Color saving (a list of previously used colors).
-<br>-Scale(1/8) preview of the drawing.
+<br>-Scale previews (1/8, 1/16) of the drawing.
   
 ![update 0 0 1 0](https://user-images.githubusercontent.com/77432892/184647483-0ffd1c90-d31d-442d-ba90-f23769464a85.png)  
 ![update](https://user-images.githubusercontent.com/77432892/184183610-76f0ffe9-04e3-4f47-b03b-04e00217f240.png)
