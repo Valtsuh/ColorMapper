@@ -2,7 +2,7 @@
 
 	/*
 
-		Created by Jussi 'Valtsu(h)' Männistö
+		Created by Jussi 'Valtsu(h)' MÃ¤nnistÃ¶
 
 		To-do:
 			- Some redesigning, and tools.
@@ -36,7 +36,8 @@
 				and after typing a name, enter submits for saving / loading. (Yet to do some design)
 		[Code]
 			- Some clean ups.				
-		[Tweaks]			
+		[Tweaks]
+			- Default mouse replaced.
 			- Color palette's moved a bit.
 			- Highlights for selected color, transparent color 
 				and marker (for animation making, otherwise the software reads the first colored pixel for measuring).
