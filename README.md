@@ -1,5 +1,5 @@
 # ColorMapper
-A color mapper for the engine.
+A color mapper for the engine(for now).
 
 Features:
 <br>-Saving & loading for files.
